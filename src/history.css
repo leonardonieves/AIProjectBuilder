@@ -1,0 +1,7 @@
+.project-history { margin-top: 32px; border-top: 1px solid var(--border); }
+.project-history details, .run-record { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin: 12px 0; padding: 16px; }
+.project-history summary { cursor: pointer; line-height: 1.7; }
+.project-history pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.7 Consolas, monospace; color: var(--text); }
+.project-history .muted, .run-record small { overflow-wrap: anywhere; }
+.project-history form { margin: 20px 0; }
+.run-record p { font-size: 13px; color: var(--muted); }

@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { sections, validatePlan } from '../server/planner-contract.js';
+import { specification } from './helpers/generation-fixture.js';
+const valid = () => ({ ...Object.fromEntries(Object.keys(sections).map(key => [key, 'Concrete content for ' + key])), technical: { ...specification(), template: 'react-browser-local-v1' } });
+test('structured plan renders every section', () => { const result = validatePlan(valid()); for (const title of Object.values(sections)) assert.ok(result.includes(title)); });
+test('incomplete model output rejected', () => { const v = valid(); delete v.tests; assert.throws(() => validatePlan(v)); });
+test('empty and oversized sections rejected', () => { for (const summary of ['', ' ', 'a'.repeat(10001)]) assert.throws(() => validatePlan({ ...valid(), summary })); });
+test('unexpected fields rejected', () => assert.throws(() => validatePlan({ ...valid(), command: 'do not run' })));
+test('invalid JSON shape rejected', () => { for (const v of [null, [], 'text']) assert.throws(() => validatePlan(v)); });

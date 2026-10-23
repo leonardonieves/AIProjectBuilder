@@ -1,0 +1,9 @@
+.live-team { margin-top: 32px; border-top: 1px solid var(--border); padding-top: 20px; }
+.agent-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+.agent-card { padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); overflow-wrap: anywhere; }
+.agent-card h3 { margin-top: 0; }
+.agent-card strong { color: var(--success); }
+.agent-card p, .agent-card small { font-size: .85rem; line-height: 1.6; }
+.worker-consent { display: flex; align-items: flex-start; gap: 10px; margin: 16px 0; }
+.worker-consent input { width: auto; margin-top: 4px; }
+.live-team code { overflow-wrap: anywhere; }
