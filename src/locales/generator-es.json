@@ -1,4 +1,7 @@
 {
+  "wizard.seconds": "segundos",
+  "wizard.activityUnknown": "Sin conexión",
+  "wizard.activityTitle": "Actividad reciente de los procesos",
   "wizard.deliverable": "Entrega prevista: ZIP con código, instrucciones de arranque y reporte de revisión estática. Aún se requiere evaluación manual.",
   "wizard.title": "Crea un proyecto completo",
   "wizard.subtitle": "Describe tu aplicación local, aprueba la propuesta y descarga el código generado.",
@@ -143,3 +146,4 @@
   "wizard.manualBrowser": "Para evaluarlo manualmente, extrae el ZIP, revisa package.json y README.md y ejecuta npm install y npm run dev por tu cuenta. Este servidor de desarrollo es una herramienta, no un backend de la aplicación.",
   "wizard.manualFullstack": "Para evaluarlo manualmente, extrae el ZIP, revisa package.json y README.md y ejecuta npm install y npm run dev por tu cuenta. El servidor Express local guarda registros en SQLite."
 }
+

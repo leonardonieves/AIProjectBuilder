@@ -18,15 +18,26 @@ function Steps({step,available,onSelect}) {const {t}=useI18n();return <ol classN
 </ol>;}
 const phases=['workers','integration','review','packaging','completed'];
 const progressAt={workers:12,integration:36,review:62,packaging:86,completed:100};
-function GenerationProgress({generation,t}) {
+function GenerationProgress({generation,t,connected}) {
+  const {language,date}=useI18n();
+  const [now,setNow]=useState(Date.now());
+  const live=connected&&['running','cancelling'].includes(generation.status);
+  useEffect(()=>{if(!live)return;setNow(Date.now());const timer=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(timer);},[live,generation.id]);
+  const elapsed=attempt=>{
+    const start=Date.parse(attempt.processStartedAt||attempt.requestedAt);
+    const end=Date.parse(attempt.processClosedAt||attempt.finishedAt);
+    if(!Number.isFinite(start))return '—';
+    const seconds=Math.max(0,Math.floor(((Number.isFinite(end)?end:now)-start)/1000));
+    return new Intl.NumberFormat(language).format(seconds)+' '+t('wizard.seconds');
+  };
   const activeStage=phases.includes(generation.stage)?generation.stage:generation.failure?.stage;
   const current=phases.indexOf(activeStage);
   const progress=generation.status==='completed'?100:progressAt[activeStage]||0;
-  const working=['running','cancelling'].includes(generation.status);
+  const working=live;
   const roles=['frontend','backend','integration','reviewer'];
   return <div className="generation-progress" role="region" aria-label={t('wizard.progressTitle')}>
     <div className="progress-heading"><div><p className="eyebrow">{t('wizard.progressEyebrow')}</p><h3>{t('wizard.'+(working&&generation.status==='cancelling'?'cancelling':generation.stage))}</h3></div>
-      <span className={`progress-status ${working?'is-live':''}`} role="status">{working&&<span className="live-dot"/>}{t('status.'+generation.status)}</span></div>
+      <span className={`progress-status ${working?'is-live':''}`} role="status">{working&&<span className="live-dot"/>}{t(connected?'status.'+generation.status:'wizard.activityUnknown')}</span></div>
     <p className="progress-description">{t('wizard.stageHelp.'+(activeStage||'prepared'))}</p>
     <div className="progress-track" role="progressbar" aria-label={t('wizard.progressTitle')} aria-valuemin="0" aria-valuemax="100" aria-valuenow={progress} aria-valuetext={t('wizard.progressMilestone',{percent:progress})}>
       <span style={{width:`${progress}%`}} className={working?'is-animated':''}/>
@@ -39,10 +50,11 @@ function GenerationProgress({generation,t}) {
       </div>;
     })}</div>
     <div className="progress-footer"><span>{t('wizard.progressMilestone',{percent:progress})}</span><span>{t('wizard.cycle')}: {generation.cycle} / {generation.maxCorrections}</span></div>
-    {working&&<div className="role-progress" aria-label={t('wizard.workstreamTitle')}>{roles.map(role=>{
+    <div className="role-progress" aria-label={t('wizard.workstreamTitle')}>{roles.map(role=>{
       const attempt=generation.attempts?.findLast(item=>item.role===role);
-      return <div className="role-chip" key={role}><span className={attempt?.status==='running'?'role-pulse':''}/>{t('role.'+role)}<b>{t(attempt?'status.'+attempt.status:'wizard.waiting')}</b></div>;
-    })}</div>}
+      return <div className="role-chip" key={role}><span className={working&&attempt?.status==='running'?'role-pulse':''}/><div>{t('role.'+role)}<small>{attempt?elapsed(attempt):t('wizard.waiting')}</small></div><b>{t(!connected&&attempt?.status==='running'?'wizard.activityUnknown':attempt?'status.'+attempt.status:'wizard.waiting')}</b></div>;
+    })}</div>
+    {generation.attempts?.length>0&&<div className="generation-activity"><h4>{t('wizard.activityTitle')}</h4><ol>{generation.attempts.slice(-8).reverse().map(attempt=><li key={attempt.id}><div><strong>{t('role.'+attempt.role)}</strong><span>{t('status.'+attempt.status)}</span></div><time>{date(attempt.finishedAt||attempt.processStartedAt||attempt.requestedAt)}</time>{attempt.error&&<p>{t(attempt.error)}</p>}</li>)}</ol></div>}
     <p className="progress-note">{t('wizard.progressNote')}</p>
   </div>;
 }
@@ -79,7 +91,8 @@ function ProjectWizard({project,onChange,onRefresh,onDelete}) {
   const completed=generation?.status==='completed';
   const recommendedStep=completed?4:readyForGeneration?3:2;
   const available=[true,true,readyForGeneration,completed];
-  const step=viewStep&&available[viewStep-1]?viewStep:recommendedStep;
+  // Active work must remain visible even after navigation or a polling refresh.
+  const step=running?3:viewStep&&available[viewStep-1]?viewStep:recommendedStep;
   return <>
     <Steps step={step} available={available} onSelect={setViewStep}/><div className="workflow-intro"><p className="eyebrow">{t('wizard.stepEyebrow',{step})}</p><h1>{project.brief.name}</h1><p className="lead">{project.brief.description}</p><p className="step-guidance">{t('wizard.stepHelp.'+['idea','proposal','generate','download'][step-1])}</p></div>
     {!connected&&<p role="status" className="notice">{t(proposal?'wizard.connection':'wizard.loading')}</p>}
@@ -106,7 +119,7 @@ function ProjectWizard({project,onChange,onRefresh,onDelete}) {
     </section>}
     {step===3&&!generation&&<section><p>{t('wizard.approved')}</p><button className="primary" disabled={locked||!connected} onClick={()=>action(()=>prepare(project))}>{t('wizard.prepare')}</button></section>}
     {generation&&step>=3&&<section aria-label={t('wizard.generate')}>
-      <GenerationProgress generation={generation} t={t}/>
+      <GenerationProgress generation={generation} t={t} connected={connected}/>
       {generation.error&&<p role="alert" className="error">{t(generation.error)}</p>}
       {generation.status!=='completed'&&<p className="muted">{t('wizard.destination')}<br/><code>{generation.resultDirectory}</code></p>}
       {generation.status==='prepared'&&<><h3>{t('wizard.authorization')}</h3><label className="consent"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>{t('wizard.consent')}</label>
@@ -174,4 +187,5 @@ function App(){const {t}=useI18n();const [projects,setProjects]=useState([]),[se
     </main></div>;
 }
 createRoot(document.getElementById('root')).render(<I18nProvider><App/></I18nProvider>);
+
 

@@ -1,4 +1,7 @@
 {
+  "wizard.seconds": "seconds",
+  "wizard.activityUnknown": "Connection lost",
+  "wizard.activityTitle": "Recent process activity",
   "wizard.deliverable": "Expected delivery: source ZIP, setup instructions, and a static review report. Manual runtime evaluation remains necessary.",
   "wizard.title": "Build a complete project",
   "wizard.subtitle": "Describe your local app, approve its proposal and download the generated source.",
@@ -143,3 +146,4 @@
   "wizard.manualBrowser": "For manual evaluation, extract the ZIP, inspect package.json and README.md, then run npm install and npm run dev yourself. This development server is tooling, not an application backend.",
   "wizard.manualFullstack": "For manual evaluation, extract the ZIP, inspect package.json and README.md, then run npm install and npm run dev yourself. The local Express server stores records in SQLite."
 }
+
