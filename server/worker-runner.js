@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { resolveCodexExecutable } from './codex-executable.js';
 import { createHash } from 'node:crypto';
 import { mkdir, writeFile, readFile, stat, lstat, rename } from 'node:fs/promises';
 import path from 'node:path';
@@ -125,7 +126,7 @@ export async function runWorker(root, workflow, contract, runId, { signal, onSta
   try {
     await new Promise((resolve, reject) => {
       if (signal?.aborted) return reject(Object.assign(new Error('Trabajador cancelado.'), { code: 'CANCELLED' }));
-      const child = spawn(process.env.AIPB_CODEX_BIN || 'codex.exe', args,
+      const child = spawn(resolveCodexExecutable(), args,
         { cwd: workspace, env, shell: false, windowsHide: true });
       let settled = false, stoppingError = null;
       const finish = error => { if (settled) return; settled = true; clearTimeout(timer);

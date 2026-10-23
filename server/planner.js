@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { resolveCodexExecutable } from './codex-executable.js';
 import { mkdir, writeFile, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { planSchema, validatePlan } from './planner-contract.js';
@@ -38,7 +39,7 @@ export async function generatePlan(root, brief, runId, { signal, onStarted = () 
   try {
     await new Promise((resolve, reject) => {
       if (signal?.aborted) return reject(Object.assign(new Error('Planificación cancelada.'), { code: 'CANCELLED' }));
-      const child = spawn(process.env.AIPB_CODEX_BIN || 'codex.exe', args, { cwd: workspace, env, shell: false, windowsHide: true });
+      const child = spawn(resolveCodexExecutable(), args, { cwd: workspace, env, shell: false, windowsHide: true });
       let settled = false, stoppingError = null;
       const finish = (error) => { if (settled) return; settled = true; clearTimeout(timer); signal?.removeEventListener('abort', abort); error ? reject(error) : resolve(); };
       // Keep the slot occupied until close confirms that the process has stopped.
@@ -60,7 +61,8 @@ export async function generatePlan(root, brief, runId, { signal, onStarted = () 
       }
       child.stdout.on('data', chunk => collect(chunk, 'stdout'));
       child.stderr.on('data', chunk => collect(chunk, 'stderr'));
-      child.once('error', () => {
+      child.once('error', cause => {
+        stderr += `\nCodex process error: ${cause.code || 'UNKNOWN'}: ${cause.message}\n`;
         const error = new Error('No se pudo iniciar o detener Codex. Revisa el diagnóstico local.');
         if (!child.pid) finish(error); else stoppingError ||= error;
       });
